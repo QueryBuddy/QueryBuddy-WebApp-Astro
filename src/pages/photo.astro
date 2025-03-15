@@ -1,0 +1,187 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/pages/photo.scss';
+---
+
+<Layout title="Take Photo">
+  <div class="photo-container">
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    <div class="controls">
+      <button id="snap">Take Photo</button>
+      <button id="retake" style="display: none;">Retake</button>
+      <button id="upload" style="display: none;">Upload</button>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const video = document.getElementById('video') as HTMLVideoElement;
+  const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+  const snap = document.getElementById('snap') as HTMLButtonElement;
+  const retake = document.getElementById('retake') as HTMLButtonElement;
+  const upload = document.getElementById('upload') as HTMLButtonElement;
+  const photoContainer = document.querySelector('.photo-container') as HTMLDivElement;
+
+  let stream: MediaStream | null = null;
+  let imageBlob: Blob | null = null;
+
+  async function setupCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          facingMode: 'environment'
+        },
+        audio: false
+      });
+      video.srcObject = stream;
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      alert('Error accessing camera. Please make sure you have granted camera permissions.');
+    }
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+  }
+
+  function takePhoto() {
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw the video frame to the canvas
+    context.drawImage(video, 0, 0);
+
+    // Convert canvas to blob
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      imageBlob = blob;
+
+      // Show the canvas and hide the video
+      canvas.style.display = 'block';
+      video.style.display = 'none';
+      snap.style.display = 'none';
+      retake.style.display = 'inline-block';
+      upload.style.display = 'inline-block';
+
+      // Stop the camera
+      stopCamera();
+    }, 'image/jpeg', 0.8);
+  }
+
+  function retakePhoto() {
+    // Hide the canvas and show the video
+    canvas.style.display = 'none';
+    video.style.display = 'block';
+    snap.style.display = 'inline-block';
+    retake.style.display = 'none';
+    upload.style.display = 'none';
+
+    // Clear the canvas
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Restart the camera
+    setupCamera();
+  }
+
+  async function uploadPhoto() {
+    if (!imageBlob) return;
+
+    const formData = new FormData();
+    formData.append('photo', imageBlob, 'photo.jpg');
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      window.parent.postMessage({ type: 'photo-upload', url: result.url }, '*');
+    } catch (err) {
+      console.error('Error uploading photo:', err);
+      alert('Error uploading photo. Please try again.');
+    }
+  }
+
+  // Event listeners
+  snap.addEventListener('click', takePhoto);
+  retake.addEventListener('click', retakePhoto);
+  upload.addEventListener('click', uploadPhoto);
+
+  // Initialize camera when page loads
+  setupCamera();
+
+  // Clean up when page unloads
+  window.addEventListener('unload', stopCamera);
+</script>
+
+<style lang="scss">
+  .photo-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  video, canvas {
+    max-width: 100%;
+    max-height: calc(100% - 60px);
+    object-fit: contain;
+  }
+
+  canvas {
+    display: none;
+  }
+
+  .controls {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background: #fff;
+    color: #000;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: #eee;
+    }
+
+    &:active {
+      background: #ddd;
+    }
+  }
+</style> 

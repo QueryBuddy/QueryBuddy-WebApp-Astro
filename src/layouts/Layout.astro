@@ -1,0 +1,27 @@
+---
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="QueryBuddy - Your AI Assistant" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" href="/assets/QueryBuddy.png" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<script defer data-domain="assistant.adarshrkumar.dev" src="https://plausible.io/js/script.js"></script>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>
+
+<style lang="scss" is:global>
+	@import '../styles/globals.scss';
+</style>

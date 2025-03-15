@@ -1,0 +1,21 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const u = Astro.url.searchParams.get('u');
+const p = Astro.url.searchParams.get('p');
+const url = u ? atob(u) : '';
+const prompt = p || '';
+---
+
+<Layout title="View Image">
+  <div class="viewimage-page">
+    <main>
+      <img src={url} alt={prompt} />
+      {prompt && <p class="prompt">{prompt}</p>}
+    </main>
+  </div>
+</Layout>
+
+<style lang="scss">
+  @import '../styles/pages/viewimage.scss';
+</style> 

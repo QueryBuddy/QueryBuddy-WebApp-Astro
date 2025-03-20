@@ -1,4 +1,4 @@
-@import '../apps/weather';
+@use '../apps/weather';
 
 .chat-component {
     --app-logo: url('/assets/app.svg');

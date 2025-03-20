@@ -6,7 +6,7 @@ export const POST: APIRoute = async ({ request }) => {
         const data = await request.json();
         const { model, threadId, prompt, type, urls, voice, startingMessage } = data;
 
-        await newRequest({
+        var result = await newRequest({
             model,
             threadId,
             prompt,
@@ -16,7 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
             startingMessage
         });
 
-        return new Response(JSON.stringify({ status: 'OK' }), {
+        return new Response(JSON.stringify({ status: 'OK', content: result}), {
             status: 200,
             headers: {
                 'Content-Type': 'application/json'

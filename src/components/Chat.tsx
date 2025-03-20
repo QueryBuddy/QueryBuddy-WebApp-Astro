@@ -1,6 +1,10 @@
+import 'dotenv/config'
+
 import { useState, useRef, useEffect } from 'react';
 import type { FC } from 'react';
 import { appsData } from '../lib/apps';
+import '../styles/components/chat.scss';
+import '../styles/pages/chat.scss'
 
 const languages = [
     { code: 'en-US', label: 'English (US)' },
@@ -60,10 +64,10 @@ const ChatComponent: FC = () => {
                     addMessage('user', content);
                     break;
                 case 'create-image':
-                    response = await fetch('/api/create-image', {
+                    response = await fetch('/api/request', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: content })
+                        body: JSON.stringify({ prompt: content, type: 'create-image' })
                     });
                     if (response.ok) {
                         const data = await response.json();
@@ -106,7 +110,7 @@ const ChatComponent: FC = () => {
             setMessage('');
 
             // Send message to AI endpoint
-            const response = await fetch('/api/chat', {
+            const response = await fetch('/api/request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message, language: selectedLanguage })
@@ -221,4 +225,4 @@ const ChatComponent: FC = () => {
     );
 };
 
-export default ChatComponent; 
+export default ChatComponent;

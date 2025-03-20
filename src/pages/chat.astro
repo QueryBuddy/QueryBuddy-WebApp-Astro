@@ -1,4 +1,8 @@
 ---
+import '../styles/pages/chat.scss';
+import '../styles/components/options.scss';
+import '../styles/components/dialog.scss';
+
 import Layout from '../layouts/Layout.astro';
 import ChatComponent from '../components/Chat';
 ---
@@ -27,9 +31,3 @@ import ChatComponent from '../components/Chat';
 		initSpeechRecognition();
 	});
 </script>
-
-<style lang="scss">
-	@import '../styles/pages/chat';
-	@import '../styles/components/options';
-	@import '../styles/components/dialog';
-</style> 

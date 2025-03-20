@@ -1,0 +1,190 @@
+@import '../apps/weather';
+
+.chat-component {
+    --app-logo: url('/assets/app.svg');
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .toolbar {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: flex-end;
+        padding: var(--spacing-sm);
+        background: white;
+        border-top: 1px solid #ccc;
+
+        .upload-button {
+            position: relative;
+
+            .upload-check {
+                display: none;
+                pointer-events: none;
+            }
+
+            .upload-icon {
+                display: block;
+                width: 2em;
+                height: 2em;
+                background-image: url('/icons/upload.svg');
+                background-size: 1.2em;
+                background-position: center;
+                background-repeat: no-repeat;
+                border: none;
+                background-color: transparent;
+                cursor: pointer;
+
+                &:hover {
+                    opacity: 0.8;
+                }
+            }
+
+            .upload-iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+            }
+        }
+
+        .input {
+            flex: 1;
+            min-height: 2em;
+            max-height: 10em;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius-sm);
+            resize: none;
+            overflow-y: auto;
+            font-family: inherit;
+            font-size: 1em;
+            line-height: 1.5;
+
+            &:focus {
+                outline: none;
+                border-color: var(--primary-color);
+            }
+        }
+
+        .options {
+            display: flex;
+            gap: var(--spacing-xs);
+            align-items: center;
+
+            .dictate {
+                display: none;
+                pointer-events: none;
+
+                & + label {
+                    display: block;
+                    width: 2em;
+                    height: 2em;
+                    background-image: url('/icons/mic-off.svg');
+                    background-size: 1.2em;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    border: none;
+                    background-color: transparent;
+                    cursor: pointer;
+
+                    &:hover {
+                        opacity: 0.8;
+                    }
+                }
+
+                &:checked + label {
+                    background-image: url('/icons/mic.svg');
+                }
+            }
+
+            select {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                border: 1px solid #ccc;
+                border-radius: var(--border-radius-sm);
+                background: white;
+                font-family: inherit;
+                font-size: 0.9em;
+                cursor: pointer;
+
+                &:focus {
+                    outline: none;
+                    border-color: var(--primary-color);
+                }
+            }
+        }
+
+        .send-btn {
+            width: 2em;
+            height: 2em;
+            background-image: url('/icons/send.svg');
+            background-size: 1.2em;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+
+            &:hover {
+                opacity: 0.8;
+            }
+        }
+    }
+
+    .app-logo {
+        background-image: url('/assets/QueryBuddy.svg');
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        width: 2em;
+        height: 2em;
+        margin-right: 0.5em;
+
+        &[data-app] {
+            background-image: var(--app-logo);
+        }
+    }
+
+    .user-icon {
+        background-image: url('/icons/user.svg');
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        width: 1.5em;
+        height: 1.5em;
+    }
+
+    .upload-button {
+        background-image: url('/icons/upload.svg');
+        background-size: 1.2em;
+        background-position: center;
+        background-repeat: no-repeat;
+        width: 2em;
+        height: 2em;
+        border: none;
+        background-color: transparent;
+        cursor: pointer;
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+
+    .send-button {
+        background-image: url('/icons/send.svg');
+        background-size: 1.2em;
+        background-position: center;
+        background-repeat: no-repeat;
+        width: 2em;
+        height: 2em;
+        border: none;
+        background-color: transparent;
+        cursor: pointer;
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+} 

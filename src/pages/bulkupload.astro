@@ -1,21 +1,19 @@
 ---
+import '../styles/pages/bulkupload.scss';
+
 import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Bulk Upload">
-  <div class="bulkupload-page">
-    <main>
-      <form id="uploadForm" class="upload-form">
-        <input type="file" id="files" name="files" accept="image/*" multiple />
-        <button type="submit">Upload Files</button>
-      </form>
-      <div id="progress"></div>
-    </main>
-  </div>
+    <div class="bulkupload-page">
+        <main>
+            <form id="uploadForm" class="upload-form">
+                <input type="file" id="files" name="files" accept="image/*" multiple />
+                <button type="submit">Upload Files</button>
+            </form>
+            <div id="progress"></div>
+        </main>
+    </div>
 </Layout>
 
 <script src="../scripts/bulkupload.ts"></script>
-
-<style lang="scss">
-  @import '../styles/pages/bulkupload.scss';
-</style> 

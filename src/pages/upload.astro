@@ -1,23 +1,20 @@
 ---
+import '../styles/pages/upload.scss';
+import '../styles/components/dialog.scss';
+
 import Layout from '../layouts/Layout.astro';
 const hasParent = Astro.url.searchParams.get('hasParent') === 'true';
 ---
 
 <Layout title="Upload File">
-  <div class="upload-page">
-    <main>
-      <form id="uploadForm" class="upload-form">
-        <input type="file" id="file" name="file" accept="image/*" />
-        <button type="submit">Upload</button>
-      </form>
-    </main>
-  </div>
+    <div class="upload-page">
+        <main>
+            <form id="uploadForm" class="upload-form">
+                <input type="file" id="file" name="file" accept="image/*" />
+                <button type="submit">Upload</button>
+            </form>
+        </main>
+    </div>
 </Layout>
 
-<script src="../scripts/upload.ts" define:vars={{ hasParent }}></script>
-
-<style lang="scss">
-  @import '../styles/pages/upload.scss';
-  @import '../styles/components/dialog.scss';
-  @import '../styles/pages/my-page.scss';
-</style> 
+<script src="../scripts/upload.ts"></script>

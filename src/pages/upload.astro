@@ -14,10 +14,9 @@ const hasParent = Astro.url.searchParams.get('hasParent') === 'true';
   </div>
 </Layout>
 
-<script src="../scripts/upload.ts" define:vars={{ hasParent }}></script>
+<script src="../scripts/upload.ts"></script>
 
 <style lang="scss">
-  @import '../styles/pages/upload.scss';
-  @import '../styles/components/dialog.scss';
-  @import '../styles/pages/my-page.scss';
+  @use '../styles/pages/upload.scss';
+  // @import '../styles/components/dialog.scss';
 </style> 

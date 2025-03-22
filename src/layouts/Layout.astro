@@ -1,11 +1,16 @@
 ---
+const sTitle = 'QueryBuddy'
+
 import '../styles/globals.scss';
 
 interface Props {
     title: string;
 }
 
-const { title } = Astro.props;
+var { title } = Astro.props;
+
+if (title === '' || title.toLowerCase() === 'home') title = sTitle
+else title = `${title} | ${sTitle}`
 ---
 
 <!doctype html>

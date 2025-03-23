@@ -3,13 +3,13 @@
     "development"
   ],
   "hints": {
-    "no-inline-styles": "off",
     "compat-api/css": [
       "default",
       {
         "ignore": [
           "field-sizing",
-          "field-sizing: content"
+          "field-sizing: content",
+          "overflow: clip"
         ]
       }
     ]

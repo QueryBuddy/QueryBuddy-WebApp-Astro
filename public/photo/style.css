@@ -1,0 +1,56 @@
+html, body {
+  margin: 0;
+  margin-inline: auto;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.video {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  & > * {
+    max-width: 100%;
+    flex: 1;
+    border-radius: 1rem;
+  }
+}
+
+button {
+  margin-block: 1rem;
+  display: block;
+  margin-inline: auto;
+  font-size: 1lh;
+  border-radius: 0.25lh;
+  border-width: 1px;
+}
+
+.blocker {
+  display: none;
+  
+  position: fixed;
+  inset: 0;
+  margin: auto;
+
+  width: fit-content;
+  height: fit-content;
+
+  font-size: 10rem;
+
+  &[open] {
+    display: block;
+    
+    padding: 2rem;
+
+    background-color: #fff5;
+    line-height: 1;
+
+    border-radius: 2rem;
+  }
+}

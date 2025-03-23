@@ -1,0 +1,23 @@
+.dialog {
+    --margin: 5rem;
+    --padding: 1em;
+    --size: calc(100% - var(--margin));
+
+    box-sizing: border-box;
+
+    width: var(--size);
+    height: var(--size);
+
+    max-width: var(--size);
+    max-height: var(--size);
+
+    border: none;
+    border-radius: 2rem;
+
+    /* &:has(> iframe) {
+    } */
+    > iframe {
+        width: 100%;
+        height: 100%;            
+    }
+}

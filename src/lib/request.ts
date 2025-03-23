@@ -35,7 +35,7 @@ function isJSON(text) {
   return isValid;
 }
 
-function newRequest(res, model, threadId, prompt, type, urls, voice, startingMessage) {
+function newRequest(model, thread, prompt, type, urls, voice, startingMessage) {
   if (!urls) urls = []
 
   const headers = {
@@ -43,42 +43,44 @@ function newRequest(res, model, threadId, prompt, type, urls, voice, startingMes
     Authorization: `Bearer ${api_key}`,
   };
 
+  var res = {status: 'Error', content: 'Unknown Error'}
+
   switch (type) {
     case 'create-image': 
       model = `dall-e-${3}`
-      imageRequest(headers, res, threadId, prompt, model, startingMessage)
+      res = imageRequest(headers, threadId, prompt, model, startingMessage)
       break;
     case 'create-audio':
       model = `tts-${1}-hd`
-      audioRequest(res, threadId, prompt, voice, model, startingMessage)
+      res = audioRequest(threadId, prompt, voice, model, startingMessage)
       break;
     case 'transcribe-audio': 
       var path = `/temp/${prompt}`
       model = `whisper-${1}`
-      transcriptionRequest(path, threadId, res, model, startingMessage)
+      res = transcriptionRequest(path, threadId, model, startingMessage)
       break;
     default:
       if (!model) model = config.defaultModel ?? Object.keys(models).find(m => !m.startsWith('_'))
-      textRequest(res, threadId, prompt, model, type, urls, startingMessage)
+      res = textRequest(threadId, prompt, model, type, urls, startingMessage)
       break;
   }
+
+  return res
 }
 
-async function textRequest(res, threadId, prompt, model, type, urls, startingMessage) {
+async function textRequest(threadId, prompt, model, type, urls, startingMessage) {
   var modelObj = models[model]
 
   if (type === 'live-image-send') type = 'image'
 
   if (!modelObj) {
     console.dir({model: model, modelObj: modelObj, message: 'Model not found'})
-    res.send({status: 'Error', content: `Model ${model} not found`})
-    return
+    return {status: 'Error', content: `Model ${model} not found`}
   }
     
   if (startingMessage) {
     var sOutput = await (await modelObj.actions).completion(prompt, model, type, urls, true, startingMessage)
-    res.send({status: 'OK', content: sOutput})
-    return
+    return {status: 'OK', content: sOutput}
   }
   
   // Save user message to thread file
@@ -110,21 +112,21 @@ async function textRequest(res, threadId, prompt, model, type, urls, startingMes
 
   // var cOutput = await (await modelObj.actions).completion(previousMessages, checkPrompt, model, type, urls, false, startingMessage)
   // if (cOutput === 'good') {
-  //   res.send({status: 'OK', content: output})
+  //   return {status: 'OK', content: output}
   // }
   // else if (cOutput === 'not good') {
   //   if (errorCheck.includes('{errorMessage}')) {
   //     errorCheck = errorCheck.replace('{errorMessage}', output)
   //   }
   //   output = await (await modelObj.actions).completion(previousMessages, errorCheck, model, type, urls, false, startingMessage)
-  //   res.send({status: 'Error', content: output})
+  //   return {status: 'Error', content: output}
   // }
   // else {
-      res.send(output)
+      return output
   // }
 }
 
-async function imageRequest(headers, res, threadId, prompt, model, startingMessage) {
+async function imageRequest(headers, threadId, prompt, model, startingMessage) {
   const payload = {
     model: model,
     prompt: prompt,
@@ -141,19 +143,19 @@ async function imageRequest(headers, res, threadId, prompt, model, startingMessa
   const body = await response.json();
   if (body.error) {
     var err = body.error.message
-    res.send({content: err, status: 'Error'})
+    return {content: err, status: 'Error'}
   }
   else {
     data = body["data"];
     data.forEach(d => {
       url = d["url"];
       var status = url.includes('://') ? 'Success' : 'Error'
-      res.send({status: status, content: url});
+      return {status: status, content: url}
     });
   }
 }
 
-async function audioRequest(res, threadId, prompt, voice, model, startingMessage) {
+async function audioRequest(threadId, prompt, voice, model, startingMessage) {
   var fname = './speech.mp3'
   const speechFile = path.resolve(fname);
 
@@ -166,16 +168,16 @@ async function audioRequest(res, threadId, prompt, voice, model, startingMessage
   });
   const buffer = Buffer.from(await mp3.arrayBuffer());
   await fs.promises.writeFile(speechFile, buffer);
-  res.send(fname)
+  return fname
 }
 
-async function transcriptionRequest(path, threadId, res, model, startingMessage) {
+async function transcriptionRequest(path, threadId, model, startingMessage) {
   const transcription = await openai.audio.transcriptions.create({
     file: fs.createReadStream(path),
     model: model,
   });
 
-  res.send({status: 'OK', content: transcription.text});
+  return {status: 'OK', content: transcription.text}
 }
 
 export default newRequest

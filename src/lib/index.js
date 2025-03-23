@@ -7,10 +7,7 @@ var app = express()
 import fs from 'fs';
 import path from 'path'
 
-import hostRequestEndpoint from './hostRequest.js'
 import hostThreadEndpoints from './hostThreads.js'
-
-import uploadFile from './uploadFile.js'
 
 import config from './config.js'
 var appsList = config.appsList
@@ -27,8 +24,6 @@ app.get('/', (req, res) => {
   res.redirect('/chat')
 })
 
-app = hostRequestEndpoint(app)
-
 appsList.forEach((aName, i) => {
   var hPath = `/get${aName[0].toUpperCase()}${aName.slice(1)}`
   var fPath = `./apps/${aName[0].toLowerCase()}${aName.slice(1)}.js`
@@ -38,8 +33,6 @@ appsList.forEach((aName, i) => {
     })
   })
 })
-
-app.post("/uploadFile", uploadFile)
 
 app.get('/temp/:name', (req, res) => {
   var name = req.params.name

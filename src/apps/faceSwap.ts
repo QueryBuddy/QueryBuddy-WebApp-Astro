@@ -1,8 +1,7 @@
 import { URLSearchParams } from 'url';
-import fetch from 'node-fetch';
 const encodedParams = new URLSearchParams();
 
-export default function({ target_url, swap_url }) {
+export default function({ target_url, swap_url }: { target_url: string, swap_url: string }) {
   encodedParams.set('target_url', target_url);
   encodedParams.set('swap_url', swap_url);
 
@@ -11,7 +10,7 @@ export default function({ target_url, swap_url }) {
   let options = {
     method: 'POST',
     headers: {
-      'x-magicapi-key': process.env.MAGICAPI_API_KEY,
+      'x-magicapi-key': process.env.MAGICAPI_API_KEY || '',
       'content-type': 'application/x-www-form-urlencoded'
     },
     body: encodedParams

@@ -1,156 +1,321 @@
 import { useEffect, useRef, useState } from 'react';
-import Layout from '../layouts/Layout.astro';
 import '../styles/pages/chat.scss';
 import '../styles/components/options.scss';
 import '../styles/components/dialog.scss';
 
 // Import external libraries
 import { marked } from 'marked';
-import TurndownService from 'turndown';
+// import TurndownService from 'turndown';
+import { getLanguageOptions } from '../lib/languages';
+import { useApps } from '../lib/useApps';
+import { useThreads } from '../lib/useThreads';
 
-interface ChatProps {}
+interface Message {
+  role: 'user' | 'ai' | 'info' | 'warning' | 'app' | 'error';
+  content: string;
+  variation?: 'alert' | 'info' | 'warning';
+  appName?: string;
+  isApp?: boolean;
+}
 
-const Chat: React.FC<ChatProps> = () => {
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [isDictateEnabled, setIsDictateEnabled] = useState(false);
+interface ChatProps {
+  keepValue?: boolean;
+  maxUses?: number;
+  messageSpeed?: number;
+}
+
+// Add SpeechRecognition type
+declare global {
+  interface Window {
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
+interface SpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start(): void;
+  stop(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+const Chat: React.FC<ChatProps> = ({
+  keepValue = false,
+  maxUses = 10,
+  messageSpeed = 1
+}) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [useCount, setUseCount] = useState(0);
   const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [selectedModel, setSelectedModel] = useState('');
+  const [isDictateEnabled, setIsDictateEnabled] = useState(false);
+  const [fileUrls, setFileUrls] = useState<string[]>([]);
+  const [fileNames, setFileNames] = useState<string[]>([]);
 
   const messagesRef = useRef<HTMLDivElement>(null);
-  const htmlPreviewRef = useRef<HTMLIFrameElement>(null);
-  const uploadIframeRef = useRef<HTMLIFrameElement>(null);
-  const livePhotoDialogRef = useRef<HTMLDialogElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const speechRecognizerRef = useRef<SpeechRecognition | null>(null);
+  const { apps, messages: appMessages } = useApps();
+  const { threads, currentThread, createThread, deleteThread, setCurrentThread, isLoading: isThreadLoading } = useThreads();
 
   useEffect(() => {
-    // Load external scripts
-    const markedScript = document.createElement('script');
-    markedScript.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
-    document.body.appendChild(markedScript);
+    // Initialize speech recognition if available
+    if ('webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.webkitSpeechRecognition;
+      speechRecognizerRef.current = new SpeechRecognition();
+      speechRecognizerRef.current.lang = selectedLanguage;
+      speechRecognizerRef.current.continuous = true;
+      speechRecognizerRef.current.interimResults = true;
 
-    const turndownScript = document.createElement('script');
-    turndownScript.src = 'https://unpkg.com/turndown/dist/turndown.js';
-    document.body.appendChild(turndownScript);
+      speechRecognizerRef.current.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        setInputValue(transcript);
+      };
+    }
 
-    const appsScript = document.createElement('script');
-    appsScript.src = '/apps.js';
-    document.body.appendChild(appsScript);
+    // Handle file uploads from URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const fileLocation = params.get('filelocation');
+    const names = params.get('name');
+    const urls = params.get('url');
 
-    const chat2Script = document.createElement('script');
-    chat2Script.src = '/chat2.js';
-    document.body.appendChild(chat2Script);
+    if (names) {
+      const nameArray = names.includes(',') ? names.split(',') : [names];
+      setFileNames(nameArray);
+    }
 
-    const chatScript = document.createElement('script');
-    chatScript.src = '/chat.js';
-    document.body.appendChild(chatScript);
+    if (urls) {
+      const urlArray = urls.includes(',') ? urls.split(',') : [urls];
+      setFileUrls(urlArray.map(url => decodeURIComponent(url)));
+    }
 
-    const languagesScript = document.createElement('script');
-    languagesScript.src = '/languages.js';
-    document.body.appendChild(languagesScript);
+    // Send welcome message
+    sendWelcomeMessage();
 
-    return () => {
-      // Cleanup scripts when component unmounts
-      document.body.removeChild(markedScript);
-      document.body.removeChild(turndownScript);
-      document.body.removeChild(appsScript);
-      document.body.removeChild(chat2Script);
-      document.body.removeChild(chatScript);
-      document.body.removeChild(languagesScript);
-    };
-  }, []);
+    // Create initial thread if none exists
+    if (threads.length === 0 && !currentThread) {
+      createThread('New Conversation');
+    }
+  }, [threads.length, currentThread, createThread]);
+
+  const sendWelcomeMessage = async () => {
+    const welcomeMessage = `Welcome to QueryBuddy, where your images open the door to personalized, insightful responses tailored just for you.`;
+    addMessage('ai', welcomeMessage);
+  };
+
+  const addMessage = (role: Message['role'], content: string, options?: Partial<Message>) => {
+    setMessages(prev => [...prev, { role, content, ...options }]);
+    setTimeout(() => {
+      if (messagesRef.current) {
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      }
+    }, 100);
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || useCount >= maxUses) return;
+
+    const prompt = inputValue.trim();
+    addMessage('user', prompt);
+    setUseCount(prev => prev + 1);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          model: selectedModel,
+          urls: fileUrls,
+          threadId: currentThread?.id,
+        }),
+      });
+
+      const data = await response.json();
+      addMessage('ai', data.response);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      addMessage('ai', 'Sorry, there was an error processing your request.');
+    }
+
+    if (!keepValue) {
+      setInputValue('');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleDictateToggle = () => {
+    if (speechRecognizerRef.current) {
+      if (isDictateEnabled) {
+        speechRecognizerRef.current.stop();
+      } else {
+        speechRecognizerRef.current.start();
+      }
+      setIsDictateEnabled(!isDictateEnabled);
+    }
+  };
+
+  const languageOptions = getLanguageOptions();
 
   return (
-    <>
-      <main className="container">
-        <section className="messages" ref={messagesRef} />
-        <iframe 
-          title="HTML Preview" 
-          className="html-preview" 
-          ref={htmlPreviewRef}
-        />
-      </main>
-      
-      <section className="toolbar-container">
+    <div className="chat-container">
+      <div className="thread-controls">
+        <select
+          value={currentThread?.id || ''}
+          onChange={(e) => {
+            const thread = threads.find(t => t.id === e.target.value);
+            setCurrentThread(thread || null);
+          }}
+          disabled={isThreadLoading}
+          title="Select Conversation Thread"
+          aria-label="Select Conversation Thread"
+        >
+          <option value="">Select a thread</option>
+          {threads.map(thread => (
+            <option key={thread.id} value={thread.id}>
+              {thread.title}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => createThread('New Conversation')}
+          disabled={isThreadLoading}
+        >
+          New Thread
+        </button>
+        {currentThread && (
+          <button
+            onClick={() => deleteThread(currentThread.id)}
+            disabled={isThreadLoading}
+          >
+            Delete Thread
+          </button>
+        )}
+      </div>
+
+      <div className="messages" ref={messagesRef}>
+        {messages.map((message, index) => (
+          <div key={index} className={`message ${message.role}`}>
+            <div className="text__span" dangerouslySetInnerHTML={{ __html: message.content }} />
+          </div>
+        ))}
+        {appMessages.map((message, index) => (
+          <div key={`app-${index}`} className={`message ${message.type}`}>
+            <div className="text__span" dangerouslySetInnerHTML={{ __html: message.content }} />
+          </div>
+        ))}
+      </div>
+
+      <div className="toolbar-container">
         <div className="toolbar">
           <div className="upload-button">
-            <input 
-              title="Upload File" 
-              id="upload" 
-              type="checkbox" 
+            <input
+              type="checkbox"
+              id="upload"
               className="upload-check"
-              checked={isUploadOpen}
-              onChange={(e) => setIsUploadOpen(e.target.checked)}
+              title="Upload File"
             />
             <div className="upload-iframe">
-              <iframe 
-                title="Upload File Here" 
-                frameBorder="0" 
+              <iframe
+                title="Upload File Here"
                 src="/upload.html?hasParent=true"
-                ref={uploadIframeRef}
               />
             </div>
-            <label title="Upload File" htmlFor="upload" className="upload-icon" />
+            <label htmlFor="upload" className="upload-icon" title="Upload File" />
           </div>
-          
-          <textarea 
-            className="input" 
-            placeholder="Type a message..." 
+
+          <textarea
+            ref={inputRef}
+            className="input"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Type a message..."
             rows={1}
+            title="Message Input"
+            aria-label="Type your message here"
           />
-          
+
           <div className="options">
-            <input 
-              title="Dictate" 
-              className="dictate" 
-              id="chkSpeak" 
+            <input
               type="checkbox"
+              id="chkSpeak"
+              className="dictate"
               checked={isDictateEnabled}
-              onChange={(e) => setIsDictateEnabled(e.target.checked)}
+              onChange={handleDictateToggle}
+              title="Dictate Message"
             />
-            <label 
-              tabIndex={0} 
-              className="dictate" 
-              htmlFor="chkSpeak"
-            />
-            
-            <select 
-              title="Set Language" 
+            <label htmlFor="chkSpeak" className="dictate" tabIndex={0} title="Dictate Message" />
+
+            <select
               id="selLang"
               value={selectedLanguage}
               onChange={(e) => setSelectedLanguage(e.target.value)}
+              title="Select Language"
+              aria-label="Select Language"
             >
-              <option value="en-US">English (US)</option>
-              <option value="fr-FR">French (FR)</option>
-              <option value="ru-RU">Russian (RU)</option>
-              <option value="pt-BR">Portuguese (BR)</option>
-              <option value="es-ES">Spanish (ES)</option>
-              <option value="de-DE">German (DE)</option>
-              <option value="it-IT">Italian (IT)</option>
-              <option value="pl-PL">Polish (PL)</option>
-              <option value="nl-NL">Dutch (NL)</option>
+              {languageOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
-            
-            <select 
-              title="Select Model" 
+
+            <select
               id="model"
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
+              title="Select Model"
+              aria-label="Select AI Model"
             >
               {/* Model options will be populated dynamically */}
             </select>
           </div>
-          
-          <button title="Send Message" className="send-btn" />
-        </div>
-      </section>
 
-      <dialog className="dialog live-photo" ref={livePhotoDialogRef}>
-        <iframe 
-          title="Take Live Photo" 
-          frameBorder="0" 
-          data-src="/photo/take.html?mode=live-image"
-        />
-      </dialog>
-    </>
+          <button
+            className="send-btn"
+            onClick={handleSendMessage}
+            disabled={useCount >= maxUses}
+            title="Send Message"
+            aria-label="Send Message"
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 

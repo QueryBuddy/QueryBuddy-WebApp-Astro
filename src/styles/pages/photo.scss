@@ -1,0 +1,68 @@
+.photo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 750px;
+  margin: 0 auto;
+
+  .video {
+    width: 100%;
+    max-width: 640px;
+    position: relative;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+
+    video, img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  }
+
+  .countdown {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+  }
+
+  .take {
+    padding: 0.5rem 1rem;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: #0056b3;
+    }
+
+    &:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+.visible {
+  display: block;
+}
+
+.captured-image {
+  max-width: 100%;
+} 

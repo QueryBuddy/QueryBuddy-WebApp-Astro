@@ -1,20 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import UploadPage from '../components/Upload.tsx'
 
 import '../styles/pages/upload.scss'
 ---
 <Layout title="Upload">
-    <h1>Upload a File</h1>
-    <button class="photo">Take a Photo</button>
-    <p class="iframe-area photo">
-      <iframe src="" title="Take Photo"></iframe>
-    </p>
-    <form>
-      <label for="myfile">Upload File:</label>
-      <input id="myfile" type="file" name="image" required accept=".jpeg, .jpg, image/png, image/webp, image/gif" />
-      <p>
-        <input type="submit" value="Submit">
-      </p>
-    </form>
-    <script is:inline src="/upload.js"></script>
+    <UploadPage client:load />
 </Layout>

@@ -1,6 +1,4 @@
-import fetch from 'node-fetch';
-
-export default async function({ playlistId }) {
+export default async function({ playlistId }: { playlistId: string }) {
     const apiKey = process.env.YOUTUBE_API_KEY;
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`;
 
@@ -12,7 +10,7 @@ export default async function({ playlistId }) {
             return 'No videos found in playlist';
         }
 
-        const videos = data.items.map(item => {
+        const videos = data.items.map((item: { snippet: { title: string, description: string, thumbnails: { default: { url: string } }, resourceId: { videoId: string } } }) => {
             const { title, description, thumbnails } = item.snippet;
             return {
                 title,
@@ -24,6 +22,6 @@ export default async function({ playlistId }) {
 
         return JSON.stringify(videos, null, 2);
     } catch (error) {
-        return `Error fetching playlist: ${error.message}`;
+        return `Error fetching playlist: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
 }

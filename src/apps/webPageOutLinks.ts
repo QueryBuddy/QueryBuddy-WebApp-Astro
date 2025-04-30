@@ -1,7 +1,6 @@
-import fetch from 'node-fetch';
 import jsdom from 'jsdom';
 
-export default async function(url) {
+export default async function({ url }: { url: string }) {
 
   try {
     const response = await fetch(url, {
@@ -13,7 +12,7 @@ export default async function(url) {
     
     var dom = new jsdom.JSDOM(body);
     var links = dom.window.document.querySelectorAll('a');
-    var outLinks = [];
+    var outLinks: string[] = [];
     
     links.forEach(function(link) {
       if (link.href) outLinks.push(link.href);

@@ -39,4 +39,10 @@
             box-shadow: 0 0 0 1.25px black;
         }
     }
+}
+
+.upload-iframe {
+  iframe {
+    border: none;
+  }
 }  

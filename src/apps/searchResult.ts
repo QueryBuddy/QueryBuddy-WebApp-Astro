@@ -1,8 +1,7 @@
 import 'dotenv/config';
-import fetch from 'node-fetch';
 
-export default async function({ query, searchType }) {
-  var params = []
+export default async function({ query, searchType }: { query: string, searchType: string }) {
+  var params: string[] = []
   var urlPathname = 'url'
   var prop = 'href'
   var qKey = 'q'
@@ -15,8 +14,8 @@ export default async function({ query, searchType }) {
       qKey = 'imgurl'
   }
 
-  params = params.length > 0 ? `&${params.join('&')}` : ''
-  var url = `https://www.googleapis.com/customsearch/v1?key=${process.env.SEARCH_API_KEY}&cx=750a504f8a13f45f4&q=${encodeURIComponent(query)}${params}`
+  const urlParams = params.length > 0 ? `&${params.join('&')}` : ''
+  var url = `https://www.googleapis.com/customsearch/v1?key=${process.env.SEARCH_API_KEY}&cx=750a504f8a13f45f4&q=${encodeURIComponent(query)}${urlParams}`
 
   try {
     const response = await fetch(url);
@@ -26,9 +25,9 @@ export default async function({ query, searchType }) {
       return 'Empty Response Recieved'
     }
 
-    body = JSON.parse(body)
+    const parsedBody = JSON.parse(body)
 
-    var items = body.items
+    var items = parsedBody.items
 
     return items
   } catch (error) {

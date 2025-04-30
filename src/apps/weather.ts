@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 import getCountry from './country.js'
 
 var unitsObj = {
@@ -7,32 +5,27 @@ var unitsObj = {
   F: 'Imperial', 
 }
 
-export default async function(req, res) {
+export default async function({ latitude, longitude }: { latitude: number, longitude: number }) {
   var apiKey = process.env['OPENWEATHER_API_KEY'];
   
-  var latitude = req.query.lat
-  var longitude = req.query.lon
-
-  var country = getCountry(latitude, longitude)
+  var country = await getCountry({ lat: latitude, lon: longitude })
 
   if (country === 'ERROR') {
-    res.status(500).send('Error fetching weather data');
-    return
+    return { error: 'Error fetching weather data' };
   }
 
   var unit = 'C'
   if (country === 'US') unit = 'F'
 
-  var unit = unitsObj[unit]
+  var unitType = unitsObj[unit as keyof typeof unitsObj]
 
-  var url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=${unit}&appid=${apiKey}`
+  var url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=${unitType}&appid=${apiKey}`
 
   try {
     const response = await fetch(url);
     const body = await response.json();
-    res.send(body)
+    return body;
   } catch (error) {
-    console.error('Error fetching weather data:', error);
-    res.status(500).send('Error fetching weather data');
+    return { error: 'Error fetching weather data' };
   }
 }

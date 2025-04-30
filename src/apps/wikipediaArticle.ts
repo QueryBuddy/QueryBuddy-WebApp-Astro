@@ -1,7 +1,6 @@
-import fetch from 'node-fetch';
-import jsdom from 'jsdom';
+// import jsdom from 'jsdom';
 
-export default async function({ title }) {
+export default async function({ title }: { title: string }) {
   const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=${encodeURIComponent(title)}&exintro=1`
 
   try {
@@ -18,6 +17,6 @@ export default async function({ title }) {
     const extract = pages[pageId].extract
     return extract.replace(/<\/?[^>]+(>|$)/g, "") // Remove HTML tags
   } catch (error) {
-    return `Error fetching Wikipedia article: ${error.message}`
+    return `Error fetching Wikipedia article: ${error instanceof Error ? error.message : 'Unknown error'}`
   }
 }

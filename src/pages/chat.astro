@@ -1,11 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro'
-import ChatPage from '../components/chat.tsx'
+import ChatPage from '../components/Chat.tsx'
 
 import '../styles/pages/chat.scss'
 import '../styles/components/options.scss'
 import '../styles/components/dialog.scss'
 ---
 <Layout title="App">
-    <ChatPage />
+    <ChatPage client:load />
 </Layout>

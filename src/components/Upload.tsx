@@ -8,9 +8,12 @@ interface ParentWindow extends Window {
   };
 }
 
-interface UploadProps {}
+interface UploadProps {
+  isBulk?: boolean;
+  onUploadComplete?: (fileName: string) => void;
+}
 
-const Upload: React.FC<UploadProps> = () => {
+const Upload: React.FC<UploadProps> = ({ isBulk = false, onUploadComplete }) => {
   const [isPhotoActive, setIsPhotoActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -21,10 +24,17 @@ const Upload: React.FC<UploadProps> = () => {
     const hasParent = window.parent !== window;
     const parentWindow = window.parent as ParentWindow;
 
-    if (success && hasParent && parentWindow.handleUpload) {
-      parentWindow.handleUpload(window.location.search);
+    if (success && hasParent) {
+      if (parentWindow.handleUpload) {
+        parentWindow.handleUpload(window.location.search);
+      } else if (onUploadComplete) {
+        const fileName = params.get('name');
+        if (fileName) {
+          onUploadComplete(fileName);
+        }
+      }
     }
-  }, []);
+  }, [onUploadComplete]);
 
   const handlePhotoClick = () => {
     setIsPhotoActive(!isPhotoActive);
@@ -61,6 +71,8 @@ const Upload: React.FC<UploadProps> = () => {
           } else if (parentWindow.appsData?.sendLiveImage) {
             parentWindow.appsData.sendLiveImage([data]);
           }
+        } else if (onUploadComplete) {
+          onUploadComplete(data.name);
         }
       }
     } catch (error) {
@@ -72,14 +84,16 @@ const Upload: React.FC<UploadProps> = () => {
 
   return (
     <div className="upload-container">
-      <h1>Upload a File</h1>
-      <button 
-        className="photo" 
-        onClick={handlePhotoClick}
-        title="Take Photo"
-      >
-        Take a Photo
-      </button>
+      {!isBulk && <h1>Upload a File</h1>}
+      {!isBulk && (
+        <button 
+          className="photo" 
+          onClick={handlePhotoClick}
+          title="Take Photo"
+        >
+          Take a Photo
+        </button>
+      )}
       <div className={`iframe-area photo ${isPhotoActive ? 'active' : ''}`}>
         <iframe 
           src={isPhotoActive ? '/photo/take' : ''} 
